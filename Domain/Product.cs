@@ -19,6 +19,10 @@ namespace Domain
             public decimal PrecoUnitario { get; set; }
             public int QuantidadeMinima { get; set; }
             public string DataCriacao { get; set; }
+
+
+
+
         }
 
 }

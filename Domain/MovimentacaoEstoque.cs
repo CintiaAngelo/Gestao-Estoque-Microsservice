@@ -20,5 +20,8 @@ namespace Domain
         public string? Lote { get; set; }
         public string? DataValidade { get; set; }
         public int ProdutoId { get; set; }
+
+
+
     }
 }
