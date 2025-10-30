@@ -1,15 +1,27 @@
+using Infrastructure.Repositories;
+using Services;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+// ?? Conexão com o banco MySQL
+string connectionString = builder.Configuration.GetConnectionString("MySqlConnection")
+    ?? "server=localhost;database=estoque;user=root;password=123;";
+
+// ?? Injeção de dependências
+builder.Services.AddScoped<IProdutoRepository>(sp => new ProdutoRepository(connectionString));
+builder.Services.AddScoped<IMovimentacaoRepository>(sp => new MovimentacaoRepository(connectionString));
+
+builder.Services.AddScoped<ProdutoService>();
+builder.Services.AddScoped<MovimentacaoService>();
+builder.Services.AddScoped<RelatorioService>();
 
 builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// ?? Swagger
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -17,9 +29,5 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
-app.UseAuthorization();
-
 app.MapControllers();
-
 app.Run();
