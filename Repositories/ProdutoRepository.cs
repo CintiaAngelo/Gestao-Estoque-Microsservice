@@ -1,4 +1,5 @@
-﻿using Domain;
+﻿using Dapper;
+using Domain;
 using MySql.Data.MySqlClient;
 using System.Collections.Generic;
 
@@ -13,100 +14,50 @@ namespace Infrastructure.Repositories
             _connectionString = connectionString;
         }
 
-        public void Atualizar(Produto produto)
+        public void CadastrarProduto(Produto produto)
         {
-            throw new NotImplementedException();
-        }
-
-        public void AtualizarProduto(Produto produto)
-        {
-            throw new NotImplementedException();
+            using var conn = new MySqlConnection(_connectionString);
+            var query = @"INSERT INTO Produto 
+                         (CodigoSKU, Nome, Categoria, PrecoUnitario, QuantidadeMinima, QuantidadeEstoque, DataCriacao)
+                         VALUES (@CodigoSKU, @Nome, @Categoria, @PrecoUnitario, @QuantidadeMinima, @QuantidadeEstoque, @DataCriacao)";
+            conn.Execute(query, produto);
         }
 
         public Produto? BuscarPorId(int id)
         {
-            throw new NotImplementedException();
+            using var conn = new MySqlConnection(_connectionString);
+            return conn.QueryFirstOrDefault<Produto>(
+                "SELECT * FROM Produto WHERE Id = @Id",
+                new { Id = id });
         }
 
-        public Produto BuscarPorSKU(string codigoSKU)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void CadastrarProduto(Produto produto)
+        public Produto? BuscarPorSKU(string sku)
         {
             using var conn = new MySqlConnection(_connectionString);
-            conn.Open();
-
-            string sql = @"INSERT INTO Produto 
-                           (CodigoSKU, Nome, Categoria, PrecoUnitario, QuantidadeMinima, QuantidadeEstoque, DataCriacao)
-                           VALUES (@CodigoSKU, @Nome, @Categoria, @PrecoUnitario, @QuantidadeMinima, @QuantidadeEstoque, @DataCriacao)";
-
-            using var cmd = new MySqlCommand(sql, conn);
-            cmd.Parameters.AddWithValue("@CodigoSKU", produto.CodigoSKU);
-            cmd.Parameters.AddWithValue("@Nome", produto.Nome);
-            cmd.Parameters.AddWithValue("@Categoria", produto.Categoria.ToString());
-            cmd.Parameters.AddWithValue("@PrecoUnitario", produto.PrecoUnitario);
-            cmd.Parameters.AddWithValue("@QuantidadeMinima", produto.QuantidadeMinima);
-            cmd.Parameters.AddWithValue("@QuantidadeEstoque", produto.QuantidadeEstoque);
-            cmd.Parameters.AddWithValue("@DataCriacao", produto.DataCriacao);
-            cmd.ExecuteNonQuery();
+            return conn.QueryFirstOrDefault<Produto>(
+                "SELECT * FROM Produto WHERE CodigoSKU = @CodigoSKU",
+                new { CodigoSKU = sku });
         }
 
         public List<Produto> ListarTodos()
         {
-            var produtos = new List<Produto>();
             using var conn = new MySqlConnection(_connectionString);
-            conn.Open();
-
-            string sql = "SELECT * FROM Produto";
-            using var cmd = new MySqlCommand(sql, conn);
-            using var reader = cmd.ExecuteReader();
-
-            while (reader.Read())
-            {
-                produtos.Add(new Produto
-                {
-                    Id = reader.GetInt32("Id"),
-                    CodigoSKU = reader.GetString("CodigoSKU"),
-                    Nome = reader.GetString("Nome"),
-                    Categoria = Enum.Parse<Categoria>(reader.GetString("Categoria")),
-                    PrecoUnitario = reader.GetDecimal("PrecoUnitario"),
-                    QuantidadeMinima = reader.GetInt32("QuantidadeMinima"),
-                    QuantidadeEstoque = reader.GetInt32("QuantidadeEstoque"),
-                    DataCriacao = reader.GetDateTime("DataCriacao")
-                });
-            }
-
-            return produtos;
+            return conn.Query<Produto>("SELECT * FROM Produto").ToList();
         }
 
-        public Produto? ObterPorSKU(string codigoSKU)
+        public void Atualizar(Produto produto)
         {
             using var conn = new MySqlConnection(_connectionString);
-            conn.Open();
-
-            string sql = "SELECT * FROM Produto WHERE CodigoSKU = @CodigoSKU";
-            using var cmd = new MySqlCommand(sql, conn);
-            cmd.Parameters.AddWithValue("@CodigoSKU", codigoSKU);
-
-            using var reader = cmd.ExecuteReader();
-            if (reader.Read())
-            {
-                return new Produto
-                {
-                    Id = reader.GetInt32("Id"),
-                    CodigoSKU = reader.GetString("CodigoSKU"),
-                    Nome = reader.GetString("Nome"),
-                    Categoria = Enum.Parse<Categoria>(reader.GetString("Categoria")),
-                    PrecoUnitario = reader.GetDecimal("PrecoUnitario"),
-                    QuantidadeMinima = reader.GetInt32("QuantidadeMinima"),
-                    QuantidadeEstoque = reader.GetInt32("QuantidadeEstoque"),
-                    DataCriacao = reader.GetDateTime("DataCriacao")
-                };
-            }
-
-            return null;
+            var query = @"UPDATE Produto SET 
+                         Nome = @Nome, 
+                         Categoria = @Categoria, 
+                         PrecoUnitario = @PrecoUnitario,
+                         QuantidadeMinima = @QuantidadeMinima, 
+                         QuantidadeEstoque = @QuantidadeEstoque
+                         WHERE Id = @Id";
+            conn.Execute(query, produto);
         }
+
+        // Remove métodos duplicados não utilizados
     }
 }
